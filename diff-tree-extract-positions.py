@@ -1,8 +1,6 @@
 from __future__ import print_function
-import pygraphviz as pgv
 import sys
 import xlrd
-from diffTreeConstants import *
 
 # Column indices
 ORDER = 0
@@ -11,10 +9,14 @@ CHILDA = 2
 CHILDB = 3
 LARGER = 4
 ASYMMETRIC = 5
-RELSIZE = 6
+
+ROW_OFFSET = 1
+LARGE_LABEL = 'L'
+SMALL_LABEL = 'S'
+ASYM_LABEL = 'A'
+SAME_LABEL = 'Z'
 
 REJECTS = set([406, 290])
-ROW_OFFSET = 1
 
 existing_idents = set()
 
@@ -92,7 +94,6 @@ def lol(sheet):
         if g(sheet, row_num, ORDER) in REJECTS:
             continue
         parent = g(sheet, row_num, PARENT)
-        size = g(sheet, row_num, RELSIZE)
         sg = graph.add_subgraph()
         def pgvedge(t, ident):
             if t.startswith('AB'):
@@ -103,14 +104,13 @@ def lol(sheet):
                     style='filled',
                     fillcolor=LABEL_COLOR_MAP[ident],
                     weight=LABEL_WEIGHT_MAP.get(ident, 0),
-                    size=size,
                     largesmall=ident)
             pop.add_edge(parent, t, largesmall=ident)
         f = pgvedge
         helper(sheet, row_num, f)
     add_sibling_edges(graph)
     graph.layout('dot')
-    #graph.draw('diff-tree.png')
+    graph.draw('diff-tree.png')
     print(graph)
 
 def add_sibling_edges(graph):
@@ -131,8 +131,8 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         xls_file = sys.argv[1]
     else:
-        print("Please, provide an xls or "
-              "xlsx file as the first argument", file=sys.stderr)
+        print( "Please, provide an xls or "
+                "xlsx file as the first argument", file=sys.stderr)
         sys.exit(-1)
 
     sheet_name = None
